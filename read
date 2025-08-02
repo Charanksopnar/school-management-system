@@ -1,0 +1,25 @@
+school-management-system/  
+├── frontend/                # Web and mobile apps  
+│   ├── web/                # React.js/Angular  
+│   │   ├── src/  
+│   │   │   ├── components/ # Reusable UI elements  
+│   │   │   ├── pages/      # Role-specific dashboards  
+│   │   │   └── services/   # API calls  
+│   └── mobile/             # Flutter/React Native  
+├── backend/  
+│   ├── api/                # REST API endpoints  
+│   │   ├── student/        # Student-related routes  
+│   │   ├── teacher/        # Teacher-related routes  
+│   │   └── auth/           # Authentication routes  
+│   ├── models/             # Database schemas  
+│   ├── services/           # Business logic (e.g., fee calculation)  
+│   └── utils/              # Helpers (e.g., email/SMS triggers)  
+├── database/  
+│   ├── migrations/         # Database schema changes  
+│   └── seeds/              # Test data  
+├── docs/                   # API docs, user manuals  
+├── tests/                  # Unit, integration, E2E tests  
+└── DevOps/  
+    ├── Dockerfiles/        # Containerization  
+    ├── CI-CD/              # GitHub Actions/Jenkins pipelines  
+    └── nginx/              # Reverse proxy config  
