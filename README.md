@@ -29,31 +29,31 @@ A comprehensive school management system that caters to the needs of school admi
 ## Project Structure
 
 ```
-school-management-system/  
-├── frontend/                # Web and mobile apps  
-│   ├── web/                # React.js  
-│   │   ├── src/  
-│   │   │   ├── components/ # Reusable UI elements  
-│   │   │   ├── pages/      # Role-specific dashboards  
-│   │   │   └── services/   # API calls  
-│   └── mobile/             # Flutter/React Native (future)  
-├── backend/  
-│   ├── api/                # REST API endpoints  
-│   │   ├── student/        # Student-related routes  
-│   │   ├── teacher/        # Teacher-related routes  
-│   │   └── auth/           # Authentication routes  
-│   ├── models/             # Database schemas  
-│   ├── services/           # Business logic  
-│   └── utils/              # Helpers  
-├── database/  
-│   ├── migrations/         # Database schema changes  
-│   └── seeds/              # Test data  
-├── docs/                   # API docs, user manuals  
-├── tests/                  # Unit, integration, E2E tests  
-└── DevOps/  
-    ├── Dockerfiles/        # Containerization  
-    ├── CI-CD/              # GitHub Actions/Jenkins pipelines  
-    └── nginx/              # Reverse proxy config  
+school-management-system/
+├── frontend/                # Web and mobile apps
+│   ├── web/                # React.js
+│   │   ├── src/
+│   │   │   ├── components/ # Reusable UI elements
+│   │   │   ├── pages/      # Role-specific dashboards
+│   │   │   └── services/   # API calls
+│   └── mobile/             # Flutter/React Native (future)
+├── backend/
+│   ├── api/                # REST API endpoints
+│   │   ├── student/        # Student-related routes
+│   │   ├── teacher/        # Teacher-related routes
+│   │   └── auth/           # Authentication routes
+│   ├── models/             # Database schemas
+│   ├── services/           # Business logic
+│   └── utils/              # Helpers
+├── database/
+│   ├── migrations/         # Database schema changes
+│   └── seeds/              # Test data
+├── docs/                   # API docs, user manuals
+├── tests/                  # Unit, integration, E2E tests
+└── DevOps/
+    ├── Dockerfiles/        # Containerization
+    ├── CI-CD/              # GitHub Actions/Jenkins pipelines
+    └── nginx/              # Reverse proxy config
 ```
 
 ## Getting Started
@@ -68,7 +68,7 @@ school-management-system/
 
 1. Clone the repository
    ```
-   git clone https://github.com/yourusername/school-management-system.git
+   git clone https://github.com/Charanksopnar/school-management-system.git
    cd school-management-system
    ```
 
