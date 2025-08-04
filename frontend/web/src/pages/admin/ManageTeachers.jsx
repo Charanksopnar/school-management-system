@@ -4,6 +4,7 @@ const ManageTeachers = () => {
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingTeacher, setEditingTeacher] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,6 +15,7 @@ const ManageTeachers = () => {
     qualification: '',
     experience: '',
     subjects: '',
+    classes: '',
     joiningDate: '',
     salary: '',
     dateOfBirth: '',
@@ -86,49 +88,43 @@ const ManageTeachers = () => {
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Validate form
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.password ||
-      !formData.employeeId ||
-      !formData.qualification ||
-      !formData.subjects ||
-      !formData.salary
-    ) {
+
+    // Validate form (password not required for edit)
+    const requiredFields = editingTeacher
+      ? ['name', 'email', 'employeeId', 'qualification', 'subjects', 'salary']
+      : ['name', 'email', 'password', 'employeeId', 'qualification', 'subjects', 'salary'];
+
+    const missingFields = requiredFields.filter(field => !formData[field]);
+
+    if (missingFields.length > 0) {
       setMessage({ type: 'danger', text: 'Please fill all required fields' });
       return;
     }
-    
-    // Create new teacher
-    const newTeacher = {
-      id: teachers.length + 1,
-      ...formData
-    };
-    
+
     // Simulate API call
     setLoading(true);
     setTimeout(() => {
-      setTeachers([...teachers, newTeacher]);
+      if (editingTeacher) {
+        // Update existing teacher
+        const updatedTeachers = teachers.map(teacher =>
+          teacher.id === editingTeacher.id
+            ? { ...teacher, ...formData }
+            : teacher
+        );
+        setTeachers(updatedTeachers);
+        setMessage({ type: 'success', text: 'Teacher updated successfully' });
+      } else {
+        // Create new teacher
+        const newTeacher = {
+          id: teachers.length + 1,
+          ...formData
+        };
+        setTeachers([...teachers, newTeacher]);
+        setMessage({ type: 'success', text: 'Teacher added successfully' });
+      }
+
       setLoading(false);
-      setShowForm(false);
-      setFormData({
-        name: '',
-        email: '',
-        password: '',
-        phone: '',
-        address: '',
-        employeeId: '',
-        qualification: '',
-        experience: '',
-        subjects: '',
-        joiningDate: '',
-        salary: '',
-        dateOfBirth: '',
-        gender: ''
-      });
-      setMessage({ type: 'success', text: 'Teacher added successfully' });
+      cancelEdit();
     }, 500);
   };
 
@@ -136,7 +132,7 @@ const ManageTeachers = () => {
   const deleteTeacher = (id) => {
     if (window.confirm('Are you sure you want to delete this teacher?')) {
       setLoading(true);
-      
+
       // Simulate API call
       setTimeout(() => {
         setTeachers(teachers.filter(teacher => teacher.id !== id));
@@ -146,13 +142,57 @@ const ManageTeachers = () => {
     }
   };
 
+  // Edit teacher
+  const editTeacher = (teacher) => {
+    setEditingTeacher(teacher);
+    setFormData({
+      name: teacher.name,
+      email: teacher.email,
+      password: '',
+      phone: teacher.phone || '',
+      address: teacher.address || '',
+      employeeId: teacher.employeeId,
+      qualification: teacher.qualification,
+      experience: teacher.experience,
+      subjects: teacher.subjects,
+      classes: teacher.classes || '',
+      joiningDate: teacher.joiningDate,
+      salary: teacher.salary,
+      dateOfBirth: teacher.dateOfBirth || '',
+      gender: teacher.gender || ''
+    });
+    setShowForm(true);
+  };
+
+  // Cancel edit
+  const cancelEdit = () => {
+    setEditingTeacher(null);
+    setShowForm(false);
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      phone: '',
+      address: '',
+      employeeId: '',
+      qualification: '',
+      experience: '',
+      subjects: '',
+      classes: '',
+      joiningDate: '',
+      salary: '',
+      dateOfBirth: '',
+      gender: ''
+    });
+  };
+
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Manage Teachers</h1>
         <button
           className="btn btn-primary"
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => showForm ? cancelEdit() : setShowForm(true)}
         >
           {showForm ? 'Cancel' : 'Add New Teacher'}
         </button>
@@ -172,7 +212,7 @@ const ManageTeachers = () => {
       {showForm && (
         <div className="card mb-4">
           <div className="card-header bg-primary text-white">
-            <h4 className="mb-0">Add New Teacher</h4>
+            <h4 className="mb-0">{editingTeacher ? 'Edit Teacher' : 'Add New Teacher'}</h4>
           </div>
           <div className="card-body">
             <form onSubmit={handleSubmit}>
@@ -204,7 +244,9 @@ const ManageTeachers = () => {
                 </div>
                 
                 <div className="col-md-6 mb-3">
-                  <label htmlFor="password" className="form-label">Password *</label>
+                  <label htmlFor="password" className="form-label">
+                    Password {editingTeacher ? '(leave blank to keep current)' : '*'}
+                  </label>
                   <input
                     type="password"
                     className="form-control"
@@ -212,7 +254,8 @@ const ManageTeachers = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    required
+                    required={!editingTeacher}
+                    placeholder={editingTeacher ? 'Leave blank to keep current password' : ''}
                   />
                 </div>
                 
@@ -279,6 +322,19 @@ const ManageTeachers = () => {
                     placeholder="e.g. Mathematics, Physics"
                   />
                 </div>
+
+                <div className="col-md-6 mb-3">
+                  <label htmlFor="classes" className="form-label">Assigned Classes</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="classes"
+                    name="classes"
+                    value={formData.classes}
+                    onChange={handleChange}
+                    placeholder="e.g. Class 10-A, Class 9-B"
+                  />
+                </div>
                 
                 <div className="col-md-6 mb-3">
                   <label htmlFor="joiningDate" className="form-label">Joining Date</label>
@@ -335,7 +391,7 @@ const ManageTeachers = () => {
               </div>
               
               <button type="submit" className="btn btn-success" disabled={loading}>
-                {loading ? 'Saving...' : 'Save Teacher'}
+                {loading ? 'Saving...' : (editingTeacher ? 'Update Teacher' : 'Save Teacher')}
               </button>
             </form>
           </div>
@@ -382,6 +438,12 @@ const ManageTeachers = () => {
                         <td>{teacher.qualification}</td>
                         <td>{teacher.subjects}</td>
                         <td>
+                          <button
+                            className="btn btn-sm btn-warning me-2"
+                            onClick={() => editTeacher(teacher)}
+                          >
+                            Edit
+                          </button>
                           <button
                             className="btn btn-sm btn-danger"
                             onClick={() => deleteTeacher(teacher.id)}

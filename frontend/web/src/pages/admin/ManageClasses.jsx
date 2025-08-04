@@ -4,6 +4,11 @@ const ManageClasses = () => {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingClass, setEditingClass] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [editingTimetable, setEditingTimetable] = useState(false);
+  const [timetableData, setTimetableData] = useState({});
   const [formData, setFormData] = useState({
     name: '',
     sections: '',
@@ -28,7 +33,17 @@ const ManageClasses = () => {
       sections: 'A, B, C',
       classTeacher: 'John Smith',
       subjects: 'Mathematics, Physics, Chemistry, English, Social Studies',
-      academicYear: '2023-2024'
+      academicYear: '2023-2024',
+      totalStudents: 85,
+      studentsBySection: { A: 30, B: 28, C: 27 },
+      capacity: 90,
+      timetable: {
+        Monday: ['Math', 'Physics', 'English', 'Chemistry', 'Social Studies'],
+        Tuesday: ['Physics', 'Math', 'Chemistry', 'English', 'Computer'],
+        Wednesday: ['English', 'Social Studies', 'Math', 'Physics', 'Chemistry'],
+        Thursday: ['Chemistry', 'English', 'Math', 'Social Studies', 'Physics'],
+        Friday: ['Social Studies', 'Math', 'Physics', 'English', 'Chemistry']
+      }
     },
     {
       id: 2,
@@ -36,7 +51,17 @@ const ManageClasses = () => {
       sections: 'A, B',
       classTeacher: 'Sarah Johnson',
       subjects: 'Mathematics, Physics, Chemistry, English, Social Studies',
-      academicYear: '2023-2024'
+      academicYear: '2023-2024',
+      totalStudents: 58,
+      studentsBySection: { A: 30, B: 28 },
+      capacity: 60,
+      timetable: {
+        Monday: ['Math', 'English', 'Physics', 'Chemistry', 'Social Studies'],
+        Tuesday: ['English', 'Math', 'Chemistry', 'Physics', 'Computer'],
+        Wednesday: ['Physics', 'Social Studies', 'Math', 'English', 'Chemistry'],
+        Thursday: ['Chemistry', 'Math', 'English', 'Social Studies', 'Physics'],
+        Friday: ['Social Studies', 'Physics', 'Math', 'English', 'Chemistry']
+      }
     },
     {
       id: 3,
@@ -44,7 +69,17 @@ const ManageClasses = () => {
       sections: 'A, B, C',
       classTeacher: 'Robert Williams',
       subjects: 'Mathematics, Science, English, Social Studies, Computer',
-      academicYear: '2023-2024'
+      academicYear: '2023-2024',
+      totalStudents: 72,
+      studentsBySection: { A: 25, B: 24, C: 23 },
+      capacity: 75,
+      timetable: {
+        Monday: ['Math', 'Science', 'English', 'Social Studies', 'Computer'],
+        Tuesday: ['Science', 'Math', 'English', 'Computer', 'Social Studies'],
+        Wednesday: ['English', 'Social Studies', 'Math', 'Science', 'Computer'],
+        Thursday: ['Computer', 'English', 'Math', 'Social Studies', 'Science'],
+        Friday: ['Social Studies', 'Math', 'Science', 'English', 'Computer']
+      }
     }
   ];
 
@@ -70,7 +105,7 @@ const ManageClasses = () => {
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Validate form
     if (
       !formData.name ||
@@ -82,27 +117,31 @@ const ManageClasses = () => {
       setMessage({ type: 'danger', text: 'Please fill all fields' });
       return;
     }
-    
-    // Create new class
-    const newClass = {
-      id: classes.length + 1,
-      ...formData
-    };
-    
+
     // Simulate API call
     setLoading(true);
     setTimeout(() => {
-      setClasses([...classes, newClass]);
+      if (editingClass) {
+        // Update existing class
+        const updatedClasses = classes.map(cls =>
+          cls.id === editingClass.id
+            ? { ...cls, ...formData }
+            : cls
+        );
+        setClasses(updatedClasses);
+        setMessage({ type: 'success', text: 'Class updated successfully' });
+      } else {
+        // Create new class
+        const newClass = {
+          id: classes.length + 1,
+          ...formData
+        };
+        setClasses([...classes, newClass]);
+        setMessage({ type: 'success', text: 'Class added successfully' });
+      }
+
       setLoading(false);
-      setShowForm(false);
-      setFormData({
-        name: '',
-        sections: '',
-        classTeacher: '',
-        subjects: '',
-        academicYear: ''
-      });
-      setMessage({ type: 'success', text: 'Class added successfully' });
+      cancelEdit();
     }, 500);
   };
 
@@ -110,7 +149,7 @@ const ManageClasses = () => {
   const deleteClass = (id) => {
     if (window.confirm('Are you sure you want to delete this class?')) {
       setLoading(true);
-      
+
       // Simulate API call
       setTimeout(() => {
         setClasses(classes.filter(cls => cls.id !== id));
@@ -120,13 +159,104 @@ const ManageClasses = () => {
     }
   };
 
+  // Edit class
+  const editClass = (classData) => {
+    setEditingClass(classData);
+    setFormData({
+      name: classData.name,
+      sections: classData.sections,
+      classTeacher: classData.classTeacher,
+      subjects: classData.subjects,
+      academicYear: classData.academicYear
+    });
+    setShowForm(true);
+  };
+
+  // Cancel edit
+  const cancelEdit = () => {
+    setEditingClass(null);
+    setShowForm(false);
+    setFormData({
+      name: '',
+      sections: '',
+      classTeacher: '',
+      subjects: '',
+      academicYear: ''
+    });
+  };
+
+  // View class details
+  const viewDetails = (classData) => {
+    setSelectedClass(classData);
+    setShowDetails(true);
+  };
+
+  // Close details view
+  const closeDetails = () => {
+    setSelectedClass(null);
+    setShowDetails(false);
+    setEditingTimetable(false);
+    setTimetableData({});
+  };
+
+  // Start editing timetable
+  const startEditingTimetable = () => {
+    if (selectedClass && selectedClass.timetable) {
+      setTimetableData({ ...selectedClass.timetable });
+    } else {
+      // Initialize empty timetable
+      const emptyTimetable = {};
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+      days.forEach(day => {
+        emptyTimetable[day] = ['', '', '', '', ''];
+      });
+      setTimetableData(emptyTimetable);
+    }
+    setEditingTimetable(true);
+  };
+
+  // Cancel timetable editing
+  const cancelTimetableEdit = () => {
+    setEditingTimetable(false);
+    setTimetableData({});
+  };
+
+  // Save timetable
+  const saveTimetable = () => {
+    // Update the selected class with new timetable
+    const updatedClass = {
+      ...selectedClass,
+      timetable: timetableData
+    };
+
+    // Update the classes array
+    const updatedClasses = classes.map(cls =>
+      cls.id === selectedClass.id ? updatedClass : cls
+    );
+
+    setClasses(updatedClasses);
+    setSelectedClass(updatedClass);
+    setEditingTimetable(false);
+    setMessage({ type: 'success', text: 'Timetable updated successfully' });
+  };
+
+  // Handle timetable cell change
+  const handleTimetableChange = (day, periodIndex, value) => {
+    setTimetableData(prev => ({
+      ...prev,
+      [day]: prev[day].map((subject, index) =>
+        index === periodIndex ? value : subject
+      )
+    }));
+  };
+
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Manage Classes</h1>
         <button
           className="btn btn-primary"
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => showForm ? cancelEdit() : setShowForm(true)}
         >
           {showForm ? 'Cancel' : 'Add New Class'}
         </button>
@@ -146,7 +276,7 @@ const ManageClasses = () => {
       {showForm && (
         <div className="card mb-4">
           <div className="card-header bg-primary text-white">
-            <h4 className="mb-0">Add New Class</h4>
+            <h4 className="mb-0">{editingClass ? 'Edit Class' : 'Add New Class'}</h4>
           </div>
           <div className="card-body">
             <form onSubmit={handleSubmit}>
@@ -228,7 +358,7 @@ const ManageClasses = () => {
               </div>
               
               <button type="submit" className="btn btn-success" disabled={loading}>
-                {loading ? 'Saving...' : 'Save Class'}
+                {loading ? 'Saving...' : (editingClass ? 'Update Class' : 'Save Class')}
               </button>
             </form>
           </div>
@@ -274,6 +404,18 @@ const ManageClasses = () => {
                         <td>{cls.academicYear}</td>
                         <td>
                           <button
+                            className="btn btn-sm btn-info me-1"
+                            onClick={() => viewDetails(cls)}
+                          >
+                            Details
+                          </button>
+                          <button
+                            className="btn btn-sm btn-warning me-1"
+                            onClick={() => editClass(cls)}
+                          >
+                            Edit
+                          </button>
+                          <button
                             className="btn btn-sm btn-danger"
                             onClick={() => deleteClass(cls.id)}
                           >
@@ -286,6 +428,175 @@ const ManageClasses = () => {
                 </table>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Class Details Modal */}
+      {showDetails && selectedClass && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header bg-info text-white">
+                <h5 className="modal-title">Class Details - {selectedClass.name}</h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={closeDetails}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <div className="row">
+                  <div className="col-md-6">
+                    <h6 className="text-primary">Basic Information</h6>
+                    <table className="table table-sm">
+                      <tbody>
+                        <tr>
+                          <td><strong>Class Name:</strong></td>
+                          <td>{selectedClass.name}</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Sections:</strong></td>
+                          <td>{selectedClass.sections}</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Class Teacher:</strong></td>
+                          <td>{selectedClass.classTeacher}</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Academic Year:</strong></td>
+                          <td>{selectedClass.academicYear}</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Total Students:</strong></td>
+                          <td>{selectedClass.totalStudents}/{selectedClass.capacity}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="col-md-6">
+                    <h6 className="text-primary">Students by Section</h6>
+                    <table className="table table-sm">
+                      <thead>
+                        <tr>
+                          <th>Section</th>
+                          <th>Students</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(selectedClass.studentsBySection || {}).map(([section, count]) => (
+                          <tr key={section}>
+                            <td>Section {section}</td>
+                            <td>{count}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <h6 className="text-primary">Subjects</h6>
+                  <p>{selectedClass.subjects}</p>
+                </div>
+
+                <div className="mt-4">
+                  <h6 className="text-primary">
+                    Weekly Timetable
+                    {editingTimetable && <span className="badge bg-warning ms-2">Editing</span>}
+                  </h6>
+                  <div className="table-responsive">
+                    <table className="table table-bordered table-sm">
+                      <thead className="table-light">
+                        <tr>
+                          <th>Day</th>
+                          <th>Period 1</th>
+                          <th>Period 2</th>
+                          <th>Period 3</th>
+                          <th>Period 4</th>
+                          <th>Period 5</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {editingTimetable ? (
+                          // Editable timetable
+                          ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
+                            <tr key={day}>
+                              <td><strong>{day}</strong></td>
+                              {[0, 1, 2, 3, 4].map(periodIndex => (
+                                <td key={periodIndex}>
+                                  <input
+                                    type="text"
+                                    className="form-control form-control-sm"
+                                    value={timetableData[day] ? timetableData[day][periodIndex] || '' : ''}
+                                    onChange={(e) => handleTimetableChange(day, periodIndex, e.target.value)}
+                                    placeholder="Subject"
+                                  />
+                                </td>
+                              ))}
+                            </tr>
+                          ))
+                        ) : (
+                          // Read-only timetable
+                          selectedClass.timetable ? (
+                            Object.entries(selectedClass.timetable).map(([day, periods]) => (
+                              <tr key={day}>
+                                <td><strong>{day}</strong></td>
+                                {periods.map((subject, index) => (
+                                  <td key={index}>{subject || '-'}</td>
+                                ))}
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="6" className="text-center text-muted">
+                                No timetable available. Click "Edit Timetable" to create one.
+                              </td>
+                            </tr>
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                {!editingTimetable && (
+                  <button
+                    type="button"
+                    className="btn btn-primary me-2"
+                    onClick={startEditingTimetable}
+                  >
+                    Edit Timetable
+                  </button>
+                )}
+                {editingTimetable && (
+                  <>
+                    <button
+                      type="button"
+                      className="btn btn-success me-2"
+                      onClick={saveTimetable}
+                    >
+                      Save Timetable
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-warning me-2"
+                      onClick={cancelTimetableEdit}
+                    >
+                      Cancel Edit
+                    </button>
+                  </>
+                )}
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={closeDetails}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

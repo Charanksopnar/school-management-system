@@ -4,6 +4,7 @@ const ManageStudents = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -105,50 +106,43 @@ const ManageStudents = () => {
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Validate form
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.password ||
-      !formData.rollNumber ||
-      !formData.class ||
-      !formData.section
-    ) {
+
+    // Validate form (password not required for edit)
+    const requiredFields = editingStudent
+      ? ['name', 'email', 'rollNumber', 'class', 'section']
+      : ['name', 'email', 'password', 'rollNumber', 'class', 'section'];
+
+    const missingFields = requiredFields.filter(field => !formData[field]);
+
+    if (missingFields.length > 0) {
       setMessage({ type: 'danger', text: 'Please fill all required fields' });
       return;
     }
-    
-    // Create new student
-    const newStudent = {
-      id: students.length + 1,
-      ...formData
-    };
-    
+
     // Simulate API call
     setLoading(true);
     setTimeout(() => {
-      setStudents([...students, newStudent]);
+      if (editingStudent) {
+        // Update existing student
+        const updatedStudents = students.map(student =>
+          student.id === editingStudent.id
+            ? { ...student, ...formData }
+            : student
+        );
+        setStudents(updatedStudents);
+        setMessage({ type: 'success', text: 'Student updated successfully' });
+      } else {
+        // Create new student
+        const newStudent = {
+          id: students.length + 1,
+          ...formData
+        };
+        setStudents([...students, newStudent]);
+        setMessage({ type: 'success', text: 'Student added successfully' });
+      }
+
       setLoading(false);
-      setShowForm(false);
-      setFormData({
-        name: '',
-        email: '',
-        password: '',
-        phone: '',
-        address: '',
-        rollNumber: '',
-        class: '',
-        section: '',
-        dateOfBirth: '',
-        gender: '',
-        bloodGroup: '',
-        fatherName: '',
-        motherName: '',
-        parentContact: '',
-        parentEmail: ''
-      });
-      setMessage({ type: 'success', text: 'Student added successfully' });
+      cancelEdit();
     }, 500);
   };
 
@@ -156,7 +150,7 @@ const ManageStudents = () => {
   const deleteStudent = (id) => {
     if (window.confirm('Are you sure you want to delete this student?')) {
       setLoading(true);
-      
+
       // Simulate API call
       setTimeout(() => {
         setStudents(students.filter(student => student.id !== id));
@@ -166,13 +160,59 @@ const ManageStudents = () => {
     }
   };
 
+  // Edit student
+  const editStudent = (student) => {
+    setEditingStudent(student);
+    setFormData({
+      name: student.name,
+      email: student.email,
+      password: '',
+      phone: student.phone || '',
+      address: student.address || '',
+      rollNumber: student.rollNumber,
+      class: student.class,
+      section: student.section,
+      dateOfBirth: student.dateOfBirth || '',
+      gender: student.gender || '',
+      bloodGroup: student.bloodGroup || '',
+      fatherName: student.fatherName || '',
+      motherName: student.motherName || '',
+      parentContact: student.parentContact || '',
+      parentEmail: student.parentEmail || ''
+    });
+    setShowForm(true);
+  };
+
+  // Cancel edit
+  const cancelEdit = () => {
+    setEditingStudent(null);
+    setShowForm(false);
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      phone: '',
+      address: '',
+      rollNumber: '',
+      class: '',
+      section: '',
+      dateOfBirth: '',
+      gender: '',
+      bloodGroup: '',
+      fatherName: '',
+      motherName: '',
+      parentContact: '',
+      parentEmail: ''
+    });
+  };
+
   return (
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Manage Students</h1>
         <button
           className="btn btn-primary"
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => showForm ? cancelEdit() : setShowForm(true)}
         >
           {showForm ? 'Cancel' : 'Add New Student'}
         </button>
@@ -192,7 +232,7 @@ const ManageStudents = () => {
       {showForm && (
         <div className="card mb-4">
           <div className="card-header bg-primary text-white">
-            <h4 className="mb-0">Add New Student</h4>
+            <h4 className="mb-0">{editingStudent ? 'Edit Student' : 'Add New Student'}</h4>
           </div>
           <div className="card-body">
             <form onSubmit={handleSubmit}>
@@ -224,7 +264,9 @@ const ManageStudents = () => {
                 </div>
                 
                 <div className="col-md-6 mb-3">
-                  <label htmlFor="password" className="form-label">Password *</label>
+                  <label htmlFor="password" className="form-label">
+                    Password {editingStudent ? '(leave blank to keep current)' : '*'}
+                  </label>
                   <input
                     type="password"
                     className="form-control"
@@ -232,7 +274,8 @@ const ManageStudents = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    required
+                    required={!editingStudent}
+                    placeholder={editingStudent ? 'Leave blank to keep current password' : ''}
                   />
                 </div>
                 
@@ -377,7 +420,7 @@ const ManageStudents = () => {
               </div>
               
               <button type="submit" className="btn btn-success" disabled={loading}>
-                {loading ? 'Saving...' : 'Save Student'}
+                {loading ? 'Saving...' : (editingStudent ? 'Update Student' : 'Save Student')}
               </button>
             </form>
           </div>
@@ -424,6 +467,12 @@ const ManageStudents = () => {
                         <td>{student.email}</td>
                         <td>{student.phone || '-'}</td>
                         <td>
+                          <button
+                            className="btn btn-sm btn-warning me-2"
+                            onClick={() => editStudent(student)}
+                          >
+                            Edit
+                          </button>
                           <button
                             className="btn btn-sm btn-danger"
                             onClick={() => deleteStudent(student.id)}

@@ -18,11 +18,13 @@ app.use(express.urlencoded({ extended: true }));
 const authRoutes = require('./api/auth/auth.routes');
 const studentRoutes = require('./api/student/student.routes');
 const teacherRoutes = require('./api/teacher/teacher.routes');
+const classRoutes = require('./api/class/class.routes');
 
 // Use routes
 app.use('/api/auth', authRoutes);
 app.use('/api/students', studentRoutes);
 app.use('/api/teachers', teacherRoutes);
+app.use('/api/classes', classRoutes);
 
 // Root route
 app.get('/', (req, res) => {
